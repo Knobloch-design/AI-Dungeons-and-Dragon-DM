@@ -1,51 +1,112 @@
 import requests
+import os
+import openai
+from PIL import Image
+from io import BytesIO
+import secrets
+from openai import OpenAI
+import json
+import time
 
-# Initialize variables
-user_input = ""
-game_running = True
 
-# Main loop for the game
-while game_running:
-    # Step 1: User Interaction
-    user_input = input("User: ")
+with open('secrets.json') as f:
+    secrets = json.load(f)
 
-    # Step 2: Send User Input to ChatGPT API (Instance 1) for story creation
-    chatgpt_response = send_user_input_to_chatgpt_instance_1(user_input)
+client = OpenAI(
+    # Defaults to os.environ.get("OPENAI_API_KEY")
+    # Otherwise use: api_key="Your_API_Key",
+    api_key = secrets['openai_api_key']
+)
 
-    # Step 3: Process ChatGPT Response for game logic and next scene
+"""chat_completion = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+      messages=[
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "how can I display the response of an openai assistant in python?"},
+  ]
+)
+print(chat_completion.choices[0].message.content)"""
 
-    # Step 4: Send ChatGPT Response to ChatGPT API (Instance 2) for story-to-image-prompt
-    image_prompt = send_chatgpt_response_to_chatgpt_instance_2(chatgpt_response)
+assistant = client.beta.assistants.create(
+    name="Math Tutor",
+    instructions="You are a personal math tutor. Write and run code to answer math questions.",
+    tools=[{"type": "code_interpreter", "type": "retrieval"}],
+    model="gpt-4-1106-preview"
+)
 
-    # Step 5: Send Image Prompt to Image Generator (e.g., DALL·E 2)
-    generated_image = generate_image(image_prompt)
+thread = client.beta.threads.create()
 
-    # Step 6: Display the generated image
-    display_image(generated_image)
 
-    # Step 7: Wait for User Input (continue game)
-    user_input = input("User: ")
 
-    # Optionally, you can add game-ending conditions and logic here
-    if user_input.lower() == "exit":
-        game_running = False
 
-# Game loop ends
-print("Game over. Thanks for playing!")
 
-# Define functions for API calls
-def send_user_input_to_chatgpt_instance_1(user_input):
-    # Make API call to ChatGPT Instance 1 and return the response
-    pass
 
-def send_chatgpt_response_to_chatgpt_instance_2(chatgpt_response):
-    # Make API call to ChatGPT Instance 2 and return the image prompt
-    pass
+message = client.beta.threads.messages.create(
+    thread_id=thread.id,
+    role="user",
+    content="I need to solve the equation `3x + 11 = 14`. Can you help me?"
+)
 
-def generate_image(image_prompt):
-    # Make API call to the image generator (e.g., DALL·E 2) and return the generated image
-    pass
+run = client.beta.threads.runs.create(
+  thread_id=thread.id,
+  assistant_id=assistant.id,
+)
 
-def display_image(image):
-    # Display the image in the game interface
-    pass
+run = client.beta.threads.runs.retrieve(
+  thread_id=thread.id,
+  run_id=run.id
+)
+
+
+
+
+while run.status !="completed":
+    run = client.beta.threads.runs.retrieve(
+        thread_id=thread.id,
+        run_id=run.id,
+        )
+    
+    print(run.status)
+
+messages = client.beta.threads.messages.list(
+  thread_id=thread.id
+)
+
+print(messages.data[0].content[0].text.value)
+
+
+message = client.beta.threads.messages.create(
+    thread_id=thread.id,
+    role="user",
+    content="I need to solve the equation `2x + 10 = 14`. Can you help me?"
+)
+run = client.beta.threads.runs.create(
+  thread_id=thread.id,
+  assistant_id=assistant.id,
+)
+run = client.beta.threads.runs.retrieve(
+  thread_id=thread.id,
+  run_id=run.id
+)
+
+while run.status !="completed":
+    run = client.beta.threads.runs.retrieve(
+        thread_id=thread.id,
+        run_id=run.id,
+        )
+    
+    print(run.status)
+
+messages = client.beta.threads.messages.list(
+  thread_id=thread.id
+)
+
+print(messages.data[0].content[0].text.value)
+
+print(messages)
+
+"""print("run: ", run)
+
+print("messages: ", messages)
+
+print("message: ", message)"""
