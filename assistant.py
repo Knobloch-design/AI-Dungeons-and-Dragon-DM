@@ -15,6 +15,7 @@ app = Flask(__name__)
 CORS(app)
 
 class DM:
+
     with open('secrets.json') as f:
         secrets = json.load(f)
 
@@ -42,7 +43,7 @@ class DM:
         Inspired by tales of ancient Greece and Rome, Theros presents a world directly influenced by the whims of deities. Stories set in Theros take on a much more mythic vibe, with the adventurers serving as champions of the gods themselves.
         Strixhaven University offers the secrets of magic to the students lucky enough to enter its halls. Players take on the role of pupils studying the arcane arts in Strixhaven’s five colleges.
 
-        An additional task of yours is to distill the current story setting into A SINGLE, concise text-to-image prompt suitable for DALLE. This prompt should be included at the end of every response. This prompt should capture the essence of the environment or scene described in the game. If any character is described in a prompt make sure that characters description remains consistent in all following prompts. Exclude references to speculations about the story's progression. Imagine you're describing the scene to someone who's observing from a distance, without any personal involvement. Keep track of the context as we proceed, but remember that not every excerpt will introduce a new environment. Please format the prompt following a [PREFIX], [SCENE], [SUFFIX] format where PREFIX defines the image medium, style, perspective; SCENE defines the scene, subject, or context of the image; and SUFFIX defines the overall vibes, adjectives, aesthetic descriptors, lighting, etc. Please provide the prompt as a single plain-text comma separated string with your generated PREFIX, SCENE, and SUFFIX appended together. Provide the prompt without any embellishments like quotes or \"prompt: \".
+        An additional task of yours is to distill the current story setting into A SINGLE, concise text-to-image prompt suitable for DALLE. This prompt should be included at the end of every response. This prompt must ALWAYS start with the text 'Text-to-image prompt:'. This prompt should capture the essence of the environment or scene described in the game. If any character is described in a prompt make sure that characters description remains consistent in all following prompts. Exclude references to speculations about the story's progression. Imagine you're describing the scene to someone who's observing from a distance, without any personal involvement. Keep track of the context as we proceed, but remember that not every excerpt will introduce a new environment. Please format the prompt following a [PREFIX], [SCENE], [SUFFIX] format where PREFIX defines the image medium, style, perspective; SCENE defines the scene, subject, or context of the image; and SUFFIX defines the overall vibes, adjectives, aesthetic descriptors, lighting, etc. Please provide the prompt as a single plain-text comma separated string with your generated PREFIX, SCENE, and SUFFIX appended together. Provide the prompt without any embellishments like quotes or \"prompt: \".
 
         """
 
@@ -109,7 +110,7 @@ campaign = DM
    
 
 def extract_after_dalle_prompt(input_text):
-    prompt_marker = "**DALLE Prompt:**"
+    prompt_marker = "Text-to-image prompt:"
     prompt_index = input_text.find(prompt_marker)
 
     if prompt_index != -1:
@@ -122,12 +123,12 @@ def extract_after_dalle_prompt(input_text):
     
 def replace_after_dalle_prompt(input_text, new_text):
     # Find the index of "**DALLE Prompt:**"
-    dalle_prompt_index = input_text.find("**DALLE Prompt:**")
+    dalle_prompt_index = input_text.find("Text-to-image prompt:")
 
     # Check if "**DALLE Prompt:**" is found
     if dalle_prompt_index != -1:
         # Replace the text after "**DALLE Prompt:**" with the new text
-        new_input_text = input_text[:dalle_prompt_index + len("**DALLE Prompt:**")] + new_text
+        new_input_text = input_text[:dalle_prompt_index + len("Text-to-image prompt:")] + new_text
         return new_input_text
     else:
         # If "**DALLE Prompt:**" is not found, return the original text
@@ -143,15 +144,16 @@ def process_user_input( ):
             raise ValueError('Invalid request. Missing user input.')
 
         user_input = data['input']
-        
-        # Call the message_api function with the user input
-        response = campaign.message_api(user_input)
-        print("got here2")
-        image_prompt = extract_after_dalle_prompt(response)
 
-        image_url = campaign.getAIimage(image_prompt)
+        # Call the message_api function with the user input
+        response = campaign.messageAPI(campaign,user_input)
+        print("response: ", response)
+        image_prompt = extract_after_dalle_prompt(response)
+        print("image_prompt: ", image_prompt)
+        image_url = campaign.getAIimage(campaign,image_prompt)
+        print("image_url: ", image_url)
         adjusted_response = replace_after_dalle_prompt(response, image_url)
-        print("adjusted_response: ",adjusted_response )
+        print("adjusted_response: ", adjusted_response )
         # Return the response as JSON
         return jsonify({'message': adjusted_response})
 
@@ -164,7 +166,7 @@ def process_user_input( ):
 if __name__ == '__main__':
     app.run(port=5000)
     
-    response1 = campaign.messageAPI(campaign,"I want to start I new campaign, can you help? I want to go an adventure in a fantasy setting and I will be playing the character of a level 1 human fighter named Alec. I am looking to a combat focused campaign with a mystery theme.")
+    #response1 = campaign.messageAPI(campaign,"I want to start I new campaign, can you help? I want to go an adventure in a fantasy setting and I will be playing the character of a level 1 human fighter named Alec. I am looking to a combat focused campaign with a mystery theme.")
 
 
 """

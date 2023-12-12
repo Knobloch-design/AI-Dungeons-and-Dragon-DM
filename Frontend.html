@@ -66,7 +66,7 @@
         }
 
         #right-section {
-            padding-left:160px;
+            
             width: calc(50% - 80px); /* Adjust the width to compensate for side nav */
             padding: 10px;
             background-color: #fff; /* or any color you prefer */
@@ -125,6 +125,58 @@
         #image-scroll {
             margin-top: 10px;
         }
+        table { 
+            border-collapse: collapse; 
+            border-spacing: 0; 
+            width: 100%; 
+            border: 0px solid #ddd; 
+        } 
+          
+        th, 
+        td { 
+            text-align: left; 
+            padding: 8px; 
+        } 
+  
+        /* width */         
+        ::-webkit-scrollbar { 
+            width: 10px; 
+        } 
+  
+        /* Track */ 
+        ::-webkit-scrollbar-track { 
+            background: #f1f1f1; 
+        } 
+  
+        /* Handle */ 
+        ::-webkit-scrollbar-thumb { 
+            background: #888; 
+        } 
+  
+        /* Handle on hover */ 
+        ::-webkit-scrollbar-thumb:hover { 
+            background: #555; 
+        } 
+          
+        .scroll { 
+            display: block; 
+            border: 0px solid red; 
+            padding: 5px; 
+            margin-top: 5px; 
+            width: 100%; 
+            height: 100px; 
+            overflow-y: scroll; 
+        } 
+        #image-scroll {
+            width: calc(50% - 80px); /* Set the width of the image scrollbox */
+            height: 100vh; /* Set the height to 100% of the viewport height */
+            overflow-y: auto; /* Enable vertical scrolling for the image scrollbox */
+            position: fixed; /* Keep the scrollbox fixed on the right */
+            top: 0;
+            right: 0;
+            background-color: #f1f1f1;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
@@ -155,12 +207,12 @@
             <button id="enter-button" onclick="processUserInput()">Enter</button>
         </div>
     </div>
-    <div id="right-section">
-        <div id="image-scroll">
-            <img src="dice_20.png" alt="20-sided die">
-            <!-- Scrollable section of images -->
-            <!-- Display a new image every time the Python program generates a text response -->
-        </div>
+</div>
+<div id="right-section" >
+    <div id="image-scroll" class="scroll">
+        
+        <!-- Scrollable section of images -->
+        <!-- Display a new image every time the Python program generates a text response -->
     </div>
 </div>
 <!-- Add your JavaScript for interactivity -->
@@ -198,9 +250,9 @@ async function processUserInput() {
 
 
             // Extract image URL after '**DALLE Prompt:**'
-            const dallePromptIndex = responseData.message.indexOf('**DALLE Prompt:**');
+            const dallePromptIndex = responseData.message.indexOf('Text-to-image prompt:');
             if (dallePromptIndex !== -1) {
-                const imageUrl = responseData.message.substring(dallePromptIndex + '**DALLE Prompt:**'.length).trim();
+                const imageUrl = responseData.message.substring(dallePromptIndex + 'Text-to-image prompt:'.length).trim();
                 
                 // Display the image on the right-hand side
                 displayImage(imageUrl);
@@ -211,7 +263,7 @@ async function processUserInput() {
 
             // Display the modified response in the console
             const newBackendResponse = document.createElement('div');
-            newBackendResponse.textContent = `Python Backend: ${responseData.message}`;
+            newBackendResponse.textContent = `DMAI: ${responseData.message}`;
             consoleElement.appendChild(newBackendResponse);
         } catch (error) {
             console.error('Error:', error.message);
@@ -236,12 +288,12 @@ async function processUserInput() {
 
     function extractAfterDallePrompt(inputText) {
     // Find the index of "**DALLE Prompt:**"
-    const dallePromptIndex = inputText.indexOf("**DALLE Prompt:**");
+    const dallePromptIndex = inputText.indexOf("Text-to-image prompt:");
 
     // Check if "**DALLE Prompt:**" is found
     if (dallePromptIndex !== -1) {
         // Extract and return the text after "**DALLE Prompt:**"
-        return inputText.substring(dallePromptIndex + "**DALLE Prompt:**".length).trim();
+        return inputText.substring(dallePromptIndex + "Text-to-image prompt:".length).trim();
     } else {
         // Return the original text if "**DALLE Prompt:**" is not found
         return inputText;
