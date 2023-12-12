@@ -1,0 +1,262 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-based RPG</title>
+    <!-- Add your CSS styles here -->
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .sidenav {
+            height: 100%; /* Full-height: remove this if you want "auto" height */
+            width: 160px; /* Set the width of the sidebar */
+            position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+            z-index: 1; /* Stay on top */
+            top: 0; /* Stay at the top */
+            left: 0;
+            background-color: #111; /* Black */
+            overflow-x: hidden; /* Disable horizontal scroll */
+            padding-top: 20px;
+        }
+
+        /* The navigation menu links */
+        .sidenav a {
+            padding: 6px 8px 6px 16px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+        }
+
+        /* When you mouse over the navigation links, change their color */
+        .sidenav a:hover {
+            color: #f1f1f1;
+        }
+
+        /* Style page content */
+        .main {
+            margin-left: 160px; /* Same as the width of the sidebar */
+            padding: 0px 10px;
+        }
+
+        /* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
+        @media screen and (max-height: 450px) {
+            .sidenav {padding-top: 15px;}
+            .sidenav a {font-size: 18px;}
+        }
+
+
+
+        #center-section{
+            padding-left:160px;
+            width: calc(50% - 80px); /* Adjust the width to compensate for side nav */
+            padding: 10px;
+            background-color: #fff; /* or any color you prefer */
+        }
+
+        #right-section {
+            padding-left:160px;
+            width: calc(50% - 80px); /* Adjust the width to compensate for side nav */
+            padding: 10px;
+            background-color: #fff; /* or any color you prefer */
+        }
+        #console {
+            background-color: #f0f0f0;
+            padding: 10px;
+            overflow-y: auto;
+            max-height: 300px;
+            border-bottom: 2px solid #ccc;
+        }
+
+        #text-history {
+            margin-bottom: 10px;
+        }
+
+        #input-container {
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            padding: 10px;
+            border-top: 2px solid #ccc;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 5px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #enter-button {
+            padding: 8px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #dice {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        }
+
+        .dice-image {
+            width: 50px; /* Adjust the size as needed */
+            height: auto; /* Maintain aspect ratio */
+            cursor: pointer;
+            margin-bottom: 5px; /* Add margin between dice images */
+        }
+
+        #image-scroll {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidenav">
+        <div id="dice">
+            <div id="dice">
+                <!-- Display of dice images -->
+                <img src="dice_6.png" alt="6-sided die" onclick="rollDie(6)" class="dice-image">
+                <img src="dice_8.png" alt="8-sided die" onclick="rollDie(8)" class="dice-image">
+                <img src="dice_10.png" alt="10-sided die" onclick="rollDie(10)" class="dice-image">
+                <img src="dice_12.png" alt="12-sided die" onclick="rollDie(12)" class="dice-image">
+                <img src="dice_20.png" alt="20-sided die" onclick="rollDie(20)" class="dice-image">
+            </div>
+        </div>
+    </div>
+
+<div class="main">
+    <div id="center-section">
+        <div id="console">
+            <!-- Display of past user inputs and generated text -->
+            <div id="text-history">
+                <!-- Each user input and text response goes here -->
+            </div>
+        </div>
+        <div id="input-container">
+            <!-- Input text box with 'Enter' button -->
+            <input type="text" id="user-input" placeholder="Type your input...">
+            <button id="enter-button" onclick="processUserInput()">Enter</button>
+        </div>
+    </div>
+    <div id="right-section">
+        <div id="image-scroll">
+            <img src="dice_20.png" alt="20-sided die">
+            <!-- Scrollable section of images -->
+            <!-- Display a new image every time the Python program generates a text response -->
+        </div>
+    </div>
+</div>
+<!-- Add your JavaScript for interactivity -->
+<script>
+
+async function processUserInput() {
+
+        // Get user input from the text box
+        const userInput = document.getElementById('user-input').value;
+        console.log("got here1")
+        // Update the console with the user's input
+        const consoleElement = document.getElementById('text-history');
+        const newConsoleEntry = document.createElement('div');
+        newConsoleEntry.textContent = `User: ${userInput}`;
+        consoleElement.appendChild(newConsoleEntry);
+
+        try {
+            // Make an HTTP POST request to the Python backend
+            const response = await fetch('http://localhost:5000/process_user_input', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ input: userInput }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            // Assuming the response is in JSON format
+            const responseData = await response.json();
+            console.log("response: ", responseData)
+            // Display the Python backend response in the console
+
+
+            // Extract image URL after '**DALLE Prompt:**'
+            const dallePromptIndex = responseData.message.indexOf('**DALLE Prompt:**');
+            if (dallePromptIndex !== -1) {
+                const imageUrl = responseData.message.substring(dallePromptIndex + '**DALLE Prompt:**'.length).trim();
+                
+                // Display the image on the right-hand side
+                displayImage(imageUrl);
+                
+                // Remove '**DALLE Prompt:**' and everything after that from the response data
+                responseData.message = responseData.message.substring(0, dallePromptIndex).trim();
+            }
+
+            // Display the modified response in the console
+            const newBackendResponse = document.createElement('div');
+            newBackendResponse.textContent = `Python Backend: ${responseData.message}`;
+            consoleElement.appendChild(newBackendResponse);
+        } catch (error) {
+            console.error('Error:', error.message);
+        }
+
+        // Clear the input text box
+        document.getElementById('user-input').value = '';
+        }  
+
+
+    function rollDie(sides) {
+        // Generate a random number within the specified die's range
+        const randomNumber = Math.floor(Math.random() * sides) + 1;
+
+        // Update the console with the generated number
+        const consoleElement = document.getElementById('text-history');
+        const newConsoleEntry = document.createElement('div');
+        newConsoleEntry.textContent = `You rolled a ${sides}-sided die and got: ${randomNumber}`;
+        consoleElement.appendChild(newConsoleEntry);
+    }
+
+
+    function extractAfterDallePrompt(inputText) {
+    // Find the index of "**DALLE Prompt:**"
+    const dallePromptIndex = inputText.indexOf("**DALLE Prompt:**");
+
+    // Check if "**DALLE Prompt:**" is found
+    if (dallePromptIndex !== -1) {
+        // Extract and return the text after "**DALLE Prompt:**"
+        return inputText.substring(dallePromptIndex + "**DALLE Prompt:**".length).trim();
+    } else {
+        // Return the original text if "**DALLE Prompt:**" is not found
+        return inputText;
+    }
+    }
+
+    function displayImage(imageUrl) {
+    // Assuming you have an element with id 'image-scroll' to display images
+    const imageScrollElement = document.getElementById('image-scroll');
+    const newImage = document.createElement('img');
+    newImage.src = imageUrl;
+    // You may want to set alt text and additional attributes for the image
+    imageScrollElement.appendChild(newImage);
+    }
+</script>
+
+</body>
+</html>

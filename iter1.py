@@ -1,4 +1,3 @@
-
 import requests
 import os
 import openai
@@ -11,8 +10,6 @@ import time
 from flask_cors import CORS  # Import CORS
 from flask import Flask, request, jsonify
 
-app = Flask(__name__)
-CORS(app)
 
 class DM:
     with open('secrets.json') as f:
@@ -106,7 +103,7 @@ class DM:
 
 
 campaign = DM
-   
+
 
 def extract_after_dalle_prompt(input_text):
     prompt_marker = "**DALLE Prompt:**"
@@ -120,54 +117,11 @@ def extract_after_dalle_prompt(input_text):
         # If the marker is not found, return the original text
         return input_text
     
-def replace_after_dalle_prompt(input_text, new_text):
-    # Find the index of "**DALLE Prompt:**"
-    dalle_prompt_index = input_text.find("**DALLE Prompt:**")
 
-    # Check if "**DALLE Prompt:**" is found
-    if dalle_prompt_index != -1:
-        # Replace the text after "**DALLE Prompt:**" with the new text
-        new_input_text = input_text[:dalle_prompt_index + len("**DALLE Prompt:**")] + new_text
-        return new_input_text
-    else:
-        # If "**DALLE Prompt:**" is not found, return the original text
-        return input_text
-
-@app.route('/process_user_input', methods=['POST'])
-def process_user_input( ):
-    try:
-        # Parse JSON data from the request body
-        data = request.get_json()
-        print("data: ",data)
-        if 'input' not in data:
-            raise ValueError('Invalid request. Missing user input.')
-
-        user_input = data['input']
-        
-        # Call the message_api function with the user input
-        response = campaign.message_api(user_input)
-        print("got here2")
-        image_prompt = extract_after_dalle_prompt(response)
-
-        image_url = campaign.getAIimage(image_prompt)
-        adjusted_response = replace_after_dalle_prompt(response, image_url)
-        print("adjusted_response: ",adjusted_response )
-        # Return the response as JSON
-        return jsonify({'message': adjusted_response})
-
-    except Exception as e:
-        # Handle errors and return an error response
-        return jsonify({'error': str(e)}), 400
-    
+response1 = campaign.messageAPI(campaign,"I want to start I new campaign, can you help? I want to go an adventure in a fantasy setting and I will be playing the character of a level 1 human fighter named Alec. I am looking to a combat focused campaign with a mystery theme.")
 
 
-if __name__ == '__main__':
-    app.run(port=5000)
-    
-    response1 = campaign.messageAPI(campaign,"I want to start I new campaign, can you help? I want to go an adventure in a fantasy setting and I will be playing the character of a level 1 human fighter named Alec. I am looking to a combat focused campaign with a mystery theme.")
 
-
-"""
 while True:
     print(response1)
     user_input = input("How do you proceed: ")
@@ -175,4 +129,3 @@ while True:
     prompt = extract_after_dalle_prompt(response1)
     image_url = campaign.getAIimage(prompt)
     
-"""
